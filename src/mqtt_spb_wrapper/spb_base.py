@@ -475,6 +475,7 @@ class SpbEntity:
             spb_eon_device_name: str = None,
             debug_enabled: bool = False,
             debug_id: str = "SPB_ENTITY",
+            mqtt = None
     ):
 
         # Public members -----------

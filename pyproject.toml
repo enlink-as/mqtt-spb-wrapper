@@ -23,6 +23,13 @@ dependencies = [
 ]
 requires-python = ">=3.7"
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
 [project.urls]
 Homepage = "https://github.com/javier-fg/mqtt-spb-wrapper"
 

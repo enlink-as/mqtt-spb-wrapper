@@ -22,7 +22,7 @@ class TestMqttSpbEntity(unittest.TestCase):
         entity = MqttSpbEntity(
             spb_domain_name="Group1",
             spb_eon_name="EoN1",
-            spb_eon_device_name="Device1",
+            spb_eon_device_name=["Device1", "Device2", "Device3"],
             retain_birth=True,
             debug_enabled=True,
             debug_id="TEST_ENTITY",
@@ -30,7 +30,7 @@ class TestMqttSpbEntity(unittest.TestCase):
         )
         self.assertEqual(entity.spb_domain_name, "Group1")
         self.assertEqual(entity.spb_eon_name, "EoN1")
-        self.assertEqual(entity.spb_eon_device_name, "Device1")
+        self.assertEqual(entity.spb_eon_device_name, ["Device1", "Device2", "Device3"])
         self.assertTrue(entity._retain_birth)
         self.assertTrue(entity.debug_enabled)
         self.assertEqual(entity.debug_id, "TEST_ENTITY")

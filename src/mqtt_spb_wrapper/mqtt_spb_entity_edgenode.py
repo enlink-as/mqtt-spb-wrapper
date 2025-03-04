@@ -6,15 +6,22 @@ from .spb_protobuf import addMetric
 
 class MqttSpbEntityEdgeNode(MqttSpbEntity):
 
-    def __init__(self, spb_domain_name, spb_eon_name,
-                 retain_birth=False,
-                 debug_enabled=False, debug_id="MQTT_SPB_EDGENODE",
-                 include_spb_rebirth=True):
+    def __init__(self, spb_domain_name,
+                 spb_eon_name,
+                 retain_birth=True,
+                 debug_enabled=False,
+                 debug_id="MQTT_SPB_EDGENODE",
+                 include_spb_rebirth=True,
+                 device_name=None,
+                 mqtt=None):
 
         # Initialized the object ( parent class ) with Device_id as None - Configuring it as edge node
         super().__init__(spb_domain_name=spb_domain_name, spb_eon_name=spb_eon_name,
                          retain_birth=retain_birth,
-                         debug_enabled=debug_enabled, debug_id=debug_id)
+                         debug_enabled=debug_enabled,
+                         spb_eon_device_name=device_name,
+                         debug_id=debug_id,
+                         mqtt=mqtt)
 
         # Add spB Birth command as per Specifications
         if include_spb_rebirth:
@@ -22,6 +29,9 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
                                     value=False,
                                     callback_on_change=self.publish_birth())
 
+    # Do we implement a DEATH command?
+    
+            
     def publish_command_device(self, spb_eon_device_name, commands):
 
         if not self.is_connected():  # If not connected

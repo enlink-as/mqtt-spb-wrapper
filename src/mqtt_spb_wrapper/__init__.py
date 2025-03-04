@@ -5,7 +5,7 @@ from .mqtt_spb_entity_device import MqttSpbEntityDevice
 from .mqtt_spb_entity_edgenode import MqttSpbEntityEdgeNode
 from .mqtt_spb_entity_app import MqttSpbEntityApp
 from .mqtt_spb_entity_scada import MqttSpbEntityScada
-
+from .mqtt_spb_client import SpbMQTTClient
 __all__ = [
     "MetricDataType",
     "SpbTopic",
@@ -16,4 +16,5 @@ __all__ = [
     "MqttSpbEntityEdgeNode",
     "MqttSpbEntityApp",
     "MqttSpbEntityScada",
+    "SpbMQTTClient",
 ]

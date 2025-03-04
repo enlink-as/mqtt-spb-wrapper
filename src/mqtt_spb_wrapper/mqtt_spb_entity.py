@@ -10,18 +10,20 @@ class MqttSpbEntity(SpbEntity):
     def __init__(self,
                  spb_domain_name,
                  spb_eon_name,
-                 spb_eon_device_name=None,
+                 spb_eon_device_name,
                  retain_birth=False,
                  debug_enabled=False,
                  debug_id="MQTT_SPB_ENTITY",
                  entity_is_scada=False,
+                 mqtt=None
                  ):
 
         super().__init__(spb_domain_name=spb_domain_name,
                          spb_eon_name=spb_eon_name,
                          spb_eon_device_name=spb_eon_device_name,
                          debug_enabled=debug_enabled,
-                         debug_id=debug_id
+                         debug_id=debug_id,
+                         mqtt=mqtt
                          )
 
         # Public members -----------
@@ -34,7 +36,7 @@ class MqttSpbEntity(SpbEntity):
         self._spb_namespace = "spBv1.0"     # Default spb namespace
         self._retain_birth = retain_birth
         self._entity_is_scada = entity_is_scada
-        self._mqtt = None  # Mqtt client object
+        self._mqtt = mqtt  # Mqtt client object
         self._loopback_topic = ""  # Last publish topic, to avoid loopback message reception
 
     def publish_birth(self, qos=0):
@@ -66,15 +68,17 @@ class MqttSpbEntity(SpbEntity):
         # Publish BIRTH message
         payload_bytes = self.serialize_payload_birth()
 
-        if self._spb_eon_device_name is None:  # EoN
+        if self._spb_eon_device_name == None:  # EoN
             topic = "%s/%s/NBIRTH/%s" % (self._spb_namespace,
                                          self._spb_domain_name,
                                          self._spb_eon_name)
+            print(f"PublishBirth: {topic}")
         else:
             topic = "%s/%s/DBIRTH/%s/%s" % (self._spb_namespace,
-                                           self._spb_domain_name,
-                                           self._spb_eon_name,
-                                           self._spb_eon_device_name)
+                                            self._spb_domain_name,
+                                            self._spb_eon_name,
+                                            self._spb_eon_device_name)
+            print(f"PublishBirth: {topic}")
 
         self._loopback_topic = topic
         self._mqtt_payload_publish(topic, payload_bytes, qos, self._retain_birth)
@@ -93,6 +97,7 @@ class MqttSpbEntity(SpbEntity):
         """
 
         if not self.is_connected():  # If not connected
+            print(f"MQTT not connected: {self._entity_domain}")
             self._logger.warning(
                 "%s - Could not send publish_telemetry(), not connected to MQTT server" % self._entity_domain)
             return False
@@ -122,131 +127,20 @@ class MqttSpbEntity(SpbEntity):
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
             self._logger.debug("%s - Published DATA message %s" % (self._entity_domain, topic))
+            print(f"{self._entity_domain} Published DATA message {topic}")
             return True
 
         self._logger.warning("%s - Could not publish DATA message, may be data no new data values?"
                              % self._entity_domain)
         return False
 
-    def connect(self,
-                host='localhost',
-                port=1883,
-                user="",
-                password="",
-                use_tls=False,
-                tls_ca_path="",
-                tls_cert_path="",
-                tls_key_path="",
-                tls_insecure=False,
-                timeout=5,
-                skip_death=False,
-                client_id="",
-                ):
-        """
-            Connect to the spB MQTT server
-        Args:
-            host:
-            port:
-            user:
-            password:
-            use_tls:
-            tls_ca_path:
-            tls_cert_path:
-            tls_key_path:
-            tls_insecure:
-            timeout:
-            skip_death:         If true, DEATH meassage will not be sent
-
-        Returns:
-
-        """
-        # If we are already connected, then exit
-        if self.is_connected():
-            return True
-
-        # MQTT Client configuration
-        if self._mqtt is None:
-            self._mqtt = mqtt.Client(userdata=self, client_id=client_id)
-
-        self._mqtt.on_connect = self._mqtt_on_connect
-        self._mqtt.on_disconnect = self._mqtt_on_disconnect
-        self._mqtt.on_message = self._mqtt_on_message
-
-        if user != "":
-            self._mqtt.username_pw_set(user, password)
-
-        # If client certificates are provided
-        if tls_ca_path and tls_cert_path and tls_key_path:
-            self._logger.debug("Setting CA client certificates")
-
-            if tls_insecure:
-                self._logger.debug(
-                    "Setting CA client certificates - IMPORTANT CA insecure mode ( use only for testing )")
-                import ssl
-                self._mqtt.tls_set(ca_certs=tls_ca_path, certfile=tls_cert_path, keyfile=tls_key_path,
-                                   cert_reqs=ssl.CERT_NONE)
-                self._mqtt.tls_insecure_set(True)
-            else:
-                self._logger.debug("Setting CA client certificates")
-                self._mqtt.tls_set(ca_certs=tls_ca_path, certfile=tls_cert_path, keyfile=tls_key_path)
-
-        # If only CA is provided.
-        elif tls_ca_path:
-            self._logger.debug("Setting CA certificate")
-            self._mqtt.tls_set(ca_certs=tls_ca_path)
-
-        # If TLS is enabled
-        else:
-            if use_tls:
-                self._mqtt.tls_set()  # Enable TLS encryption
-
-        # Entity DEATH message - last will message
-        if not skip_death:
-            if self._entity_is_scada:  # If it is a type entity SCADA, change the DEATH certificate
-                topic = "%s/%s/STATE/%s" % (self._spb_namespace,
-                                               self._spb_domain_name,
-                                               self._spb_eon_name)
-                self._mqtt_payload_set_last_will(topic, "OFFLINE".encode("utf-8"))  # Set message
-
-            else:  # Normal node
-                payload = getNodeDeathPayload()
-                payload_bytes = bytearray(payload.SerializeToString())
-                if self._spb_eon_device_name is None:  # EoN
-                    topic = "%s/%s/NDEATH/%s" % (self._spb_namespace,
-                                                   self._spb_domain_name,
-                                                   self._spb_eon_name)
-                else:
-                    topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
-                                                   self._spb_domain_name,
-                                                   self._spb_eon_name,
-                                                   self._spb_eon_device_name)
-                self._mqtt_payload_set_last_will(topic, payload_bytes)  # Set message
-
-        # MQTT Connect
-        self._logger.info("%s - Trying to connect MQTT server %s:%d" % (self._entity_domain, host, port))
-        try:
-            self._mqtt.connect(host, port)
-        except Exception as e:
-            self._logger.warning("%s - Could not connect to MQTT server (%s)" % (self._entity_domain, str(e)))
-            return False
-
-        self._mqtt.loop_start()  # Start MQTT background task
-        time.sleep(0.1)
-
-        # Wait some time to get connected
-        _timeout = time.time() + timeout
-        while not self.is_connected() and _timeout > time.time():
-            time.sleep(0.1)
-
-        # Return if we connected successfully
-        return self.is_connected()
 
     def disconnect(self, skip_death_publish=False):
 
         self._logger.info("%s - Disconnecting from MQTT server" % self._entity_domain)
 
         if self._mqtt is not None:
-
+            
             # Send the DEATH message -
             # If you do a graceful disconnect, the last will is not published automatically by the MQTT Broker.
             if not skip_death_publish:
@@ -254,6 +148,7 @@ class MqttSpbEntity(SpbEntity):
                     topic = "%s/%s/STATE/%s" % (self._spb_namespace,
                                                 self._spb_domain_name,
                                                 self._spb_eon_name)
+                    print(f"DEATH topic: {topic}")
                     self._mqtt_payload_publish(topic, "OFFLINE".encode("utf-8"))
 
                 else:  # Normal node
@@ -263,20 +158,16 @@ class MqttSpbEntity(SpbEntity):
                         topic = "%s/%s/NDEATH/%s" % (self._spb_namespace,
                                                      self._spb_domain_name,
                                                      self._spb_eon_name)
+                        print(f"DEATH topic: {topic}")
                     else:
                         topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
                                                         self._spb_domain_name,
                                                         self._spb_eon_name,
                                                         self._spb_eon_device_name)
+                        print(f"DEATH topic: {topic}")
                     self._mqtt_payload_publish(topic, payload_bytes)  # Set message
 
-            # Disconnect from MQTT broker
-            self._mqtt.loop_stop()
-            time.sleep(0.1)
-            self._mqtt.disconnect()
-            time.sleep(0.1)
-
-        self._mqtt = None
+        self._mqtt.disconnect()
 
     def is_connected(self):
         if self._mqtt is None:
@@ -297,6 +188,7 @@ class MqttSpbEntity(SpbEntity):
         """
 
         if not self.is_connected():
+            print("Not Connected to MQTT server")
             return False
 
         # send payload to broker
@@ -318,7 +210,7 @@ class MqttSpbEntity(SpbEntity):
 
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
-            if self._spb_eon_device_name is None:  # EoN
+            if len(self._spb_eon_device_name) == 0:  # EoN
                 topic = "%s/%s/NCMD/%s" % (self._spb_namespace,
                                            self._spb_domain_name,
                                            self._spb_eon_name)
