@@ -1,5 +1,5 @@
 from .mqtt_spb_entity import MqttSpbEntity
-
+from .spb_protobuf import getNodeDeathPayload
 
 class MqttSpbEntityDevice(MqttSpbEntity):
 
@@ -68,7 +68,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             print(topic)
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes, qos)
-            print("jau")
+
             self._logger.debug("%s - Published DATA message %s" % (self._entity_domain, topic))
             print("%s - Published DATA message %s" % (self._entity_domain, topic))
                   
@@ -77,3 +77,22 @@ class MqttSpbEntityDevice(MqttSpbEntity):
         self._logger.warning("%s - Could not publish DATA message, may be data no new data values?"
                              % self._entity_domain)
         return False
+
+    def disconnect(self, skip_death_publish=False):
+
+        self._logger.info("%s - Disconnecting from MQTT server" % self._entity_domain)
+
+        if self._mqtt is not None:
+            
+            # Send the DEATH message -
+            # If you do a graceful disconnect, the last will is not published automatically by the MQTT Broker.
+            if not skip_death_publish:
+                payload = getNodeDeathPayload()
+                payload_bytes = bytearray(payload.SerializeToString())
+                topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
+                                                self._spb_domain_name,
+                                                self._spb_eon_name,
+                                                self._spb_eon_device_name)
+                print(f"DEATH topic: {topic}")
+                self._mqtt_payload_publish(topic, payload_bytes)  # Set message
+        self._mqtt.disconnect()

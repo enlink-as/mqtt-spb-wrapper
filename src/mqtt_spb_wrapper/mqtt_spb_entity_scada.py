@@ -356,3 +356,22 @@ class MqttSpbEntityScada(MqttSpbEntityApp):
 
         # Create EoND and return reference
         return self._register_edge_device(eon_name=eon_name,eond_name=eond_name)
+
+    def publish_birth(self, qos=0):
+        if not self.is_connected():  # If not connected
+            self._logger.warning("%s - Could not send publish_birth(), not connected to MQTT server"
+                                 % self._entity_domain)
+            return False
+        
+        topic = "%s/%s/STATE/%s" % (self._spb_namespace,
+                                    self._spb_domain_name,
+                                    self._spb_eon_name)
+        self._loopback_topic = topic
+        # Send payload to the MQTT broker
+        self._mqtt_payload_publish(topic, "ONLINE".encode("utf-8"), qos, True)
+        self._logger.info("%s - Published STATE BIRTH message " % self._entity_domain)
+        self.is_birth_published = True
+        return
+
+
+
