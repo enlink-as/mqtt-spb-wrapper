@@ -42,42 +42,13 @@ class MqttSpbEntity(SpbEntity):
 
     def publish_data(self, send_all=False, qos=0):
         raise NotImplementedError("Must be implemented in subclasses")
+
+    def publish_death(self):
+        raise NotImplementedError("Must be implemented in subclasses")
     
-
-
+    
     def disconnect(self, skip_death_publish=False):
         raise NotImplementedError("Must be implemented in subclasses")
-        # self._logger.info("%s - Disconnecting from MQTT server" % self._entity_domain)
-
-        # if self._mqtt is not None:
-            
-        #     # Send the DEATH message -
-        #     # If you do a graceful disconnect, the last will is not published automatically by the MQTT Broker.
-        #     if not skip_death_publish:
-        #         if self._entity_is_scada:  # If it is a type entity SCADA, change the DEATH certificate
-        #             topic = "%s/%s/STATE/%s" % (self._spb_namespace,
-        #                                         self._spb_domain_name,
-        #                                         self._spb_eon_name)
-        #             print(f"DEATH topic: {topic}")
-        #             self._mqtt_payload_publish(topic, "OFFLINE".encode("utf-8"))
-
-        #         else:  # Normal node
-        #             payload = getNodeDeathPayload()
-        #             payload_bytes = bytearray(payload.SerializeToString())
-        #             if self._spb_eon_device_name is None:  # EoN
-        #                 topic = "%s/%s/NDEATH/%s" % (self._spb_namespace,
-        #                                              self._spb_domain_name,
-        #                                              self._spb_eon_name)
-        #                 print(f"DEATH topic: {topic}")
-        #             else:
-        #                 topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
-        #                                                 self._spb_domain_name,
-        #                                                 self._spb_eon_name,
-        #                                                 self._spb_eon_device_name)
-        #                 print(f"DEATH topic: {topic}")
-        #             self._mqtt_payload_publish(topic, payload_bytes)  # Set message
-
-        # self._mqtt.disconnect()
 
     def is_connected(self):
         if self._mqtt is None:
@@ -108,13 +79,10 @@ class MqttSpbEntity(SpbEntity):
 
 
     def _mqtt_payload_set_last_will (self, topic: str, payload:bytes, qos:int = 1, retrain:bool = False):
-
         # Set last will payload
         self._mqtt.will_set(topic, payload, qos, retrain)
 
-
     def _mqtt_on_connect(self, client, userdata, flags, rc):
-
         if rc == 0:
             self._logger.info("%s - Connected to MQTT server" % self._entity_domain)
 
@@ -131,7 +99,7 @@ class MqttSpbEntity(SpbEntity):
                                               self._spb_eon_device_name)
             client.subscribe(topic)
             self._logger.info("%s - Subscribed to MQTT topic: %s" % (self._entity_domain, topic))
-
+            print("%s - Subscribed to MQTT topic: %s" % (self._entity_domain, topic))
             # Subscribe to STATE of SCADA application
             topic = "%s/%s/STATE/+" % (self._spb_namespace,
                                        self._spb_domain_name)
@@ -162,7 +130,7 @@ class MqttSpbEntity(SpbEntity):
         msg_ts_rx = int(time.time() * 1000)  # Save the current timestamp
 
         # self._logger.info("%s - Message received  %s" % (self._entity_domain, msg.topic))
-
+        print("%s - Message received  %s" % (self._entity_domain, msg.topic))
         # Parse the topic namespace ------------------------------------------------
         topic = SpbTopic(msg.topic)  # Parse and get the topic object
 

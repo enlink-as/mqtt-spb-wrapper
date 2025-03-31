@@ -22,7 +22,6 @@ class MqttSpbEntityDevice(MqttSpbEntity):
                          )
 
     def publish_birth(self, qos=0) -> bool:
-        print("Attempting to publish birth")
         if not self.is_connected:
             print("Could not publish birth. Not connected to MQTT server")
             self._logger.warning("%s - Could not send publish_birth(), not connected to MQTT server"
@@ -34,10 +33,12 @@ class MqttSpbEntityDevice(MqttSpbEntity):
                                         self._spb_domain_name,
                                         self._spb_eon_name,
                                         self._spb_eon_device_name)
-        print(f"Topic {topic}")
+        
         self._loopback_topic = topic
         self._mqtt_payload_publish(topic, payload_bytes, qos, self._retain_birth)
         self._logger.info("%s - Published BIRTH message" % self._entity_domain)
+        print("%s - Published BIRTH message" % self._entity_domain)
+        
         self.is_birth_published = True
         return True
 
@@ -65,12 +66,12 @@ class MqttSpbEntityDevice(MqttSpbEntity):
                                            self._spb_domain_name,
                                            self._spb_eon_name,
                                            self._spb_eon_device_name)
-            print(topic)
+          
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
             self._logger.debug("%s - Published DATA message %s" % (self._entity_domain, topic))
-            print("%s - Published DATA message %s" % (self._entity_domain, topic))
+            print("(MQTT_SPB_WRAPPER) %s - Published DATA message %s" % (self._entity_domain, topic))
                   
             return True
 
@@ -87,12 +88,16 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             # Send the DEATH message -
             # If you do a graceful disconnect, the last will is not published automatically by the MQTT Broker.
             if not skip_death_publish:
-                payload = getNodeDeathPayload()
-                payload_bytes = bytearray(payload.SerializeToString())
-                topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
-                                                self._spb_domain_name,
-                                                self._spb_eon_name,
-                                                self._spb_eon_device_name)
-                print(f"DEATH topic: {topic}")
-                self._mqtt_payload_publish(topic, payload_bytes)  # Set message
+                self.publish_death()
         self._mqtt.disconnect()
+
+    def publish_death(self):
+    
+        payload = getNodeDeathPayload()
+        payload_bytes = bytearray(payload.SerializeToString())
+        topic = "%s/%s/DDEATH/%s/%s" % (self._spb_namespace,
+                                        self._spb_domain_name,
+                                        self._spb_eon_name,
+                                        self._spb_eon_device_name)
+        print(f"DEATH topic: {topic}")
+        self._mqtt_payload_publish(topic, payload_bytes)  # Set message

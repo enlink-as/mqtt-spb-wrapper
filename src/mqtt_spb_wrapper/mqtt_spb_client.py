@@ -47,8 +47,10 @@ class SpbMQTTClient:
 
         self._mqtt.on_connect =  None #self._mqtt_on_connect
         self._mqtt.on_disconnect = None #self._mqtt_on_disconnect
-        self._mqtt.on_message = None #self._mqtt_on_message
+        self._mqtt.on_message = self.on_message
 
+
+        
         if user != "":
             self._mqtt.username_pw_set(user, password)
 
@@ -122,7 +124,6 @@ class SpbMQTTClient:
         return self.is_connected()
 
     def disconnect(self):
-        
         self._mqtt.loop_stop()
         time.sleep(0.1)
 #        self._mqtt.disconnect()
@@ -139,5 +140,10 @@ class SpbMQTTClient:
     def publish(self, topic, payload, qos, retain):
         return self._mqtt.publish(topic=topic, payload=payload, qos=qos, retain=retain)
 
+    def on_message(self, client, userdata, message):
+        print(f"message received: {message.topic} : {message.payload}")
+        return (client, message)
+        
+    
     def loop_stop(self):
         self._mqtt.loop_stop()
