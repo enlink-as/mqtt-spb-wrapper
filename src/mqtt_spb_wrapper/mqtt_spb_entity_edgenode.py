@@ -46,11 +46,11 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
         # Publish BIRTH message
         payload_bytes = self.serialize_payload_birth()
 
-        topic = "%s/%s/DBIRTH/%s/%s" % (self._spb_namespace,
+        topic = "%s/%s/DBIRTH/%s" % (self._spb_namespace,
                                         self._spb_domain_name,
-                                        self._spb_eon_name,
-                                        self._spb_eon_device_name)
-        print(f"PublishBirth: {topic}")
+                                        self._spb_eon_name)
+                                        
+        print(f"Publish Node Birth: {topic}")
 
         self._loopback_topic = topic
         self._mqtt_payload_publish(topic, payload_bytes, qos, self._retain_birth)
@@ -60,13 +60,20 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
 
             
     def publish_command_device(self, spb_eon_device_name, commands):
-
+        print(f"publish_command_device")
         if not self.is_connected():  # If not connected
+
             self._logger.warning(
+                "%s - Could not send publish_command_device(), not connected to MQTT server" % self._entity_domain)
+            
+            print(
                 "%s - Could not send publish_command_device(), not connected to MQTT server" % self._entity_domain)
             return False
 
         if not isinstance(commands, dict):  # If no data commands as dictionary
+            print(
+                "%s - Could not send publish_command_device(), commands not provided or not valid. Please provide a dictionary of command:value" % self._entity_domain)
+
             self._logger.warning(
                 "%s - Could not send publish_command_device(), commands not provided or not valid. Please provide a dictionary of command:value" % self._entity_domain)
             return False
@@ -83,13 +90,15 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
                                       self._spb_domain_name,
                                       self._spb_eon_name,
                                       spb_eon_device_name)
+        print(f"topic: {topic}")
 
         if payload.metrics:
             payload_bytes = bytearray(payload.SerializeToString())
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes)
-
+            
             self._logger.info("%s - Published COMMAND message to %s" % (self._entity_domain, topic))
+            print("%s - Published COMMAND message to %s" % (self._entity_domain, topic))      
 
             return True
 

@@ -28,17 +28,19 @@ class MqttSpbEntity(SpbEntity):
 
         # Public members -----------
         self.on_command = None  # Callback function when a command is received
-        self.on_connect = None
+        
+        
         self.on_disconnect = None
-        self.on_message = None
+       # self.on_message = None
 
         # Private members -----------
         self._spb_namespace = "spBv1.0"     # Default spb namespace
         self._retain_birth = retain_birth
         self._entity_is_scada = entity_is_scada
         self._mqtt = mqtt  # Mqtt client object
+       # self._mqtt.on_connect = self._mqtt_on_connect
         self._loopback_topic = ""  # Last publish topic, to avoid loopback message reception
-
+#        self._mqtt.on_connect = self._mqtt_on_connect
 
     def publish_data(self, send_all=False, qos=0):
         raise NotImplementedError("Must be implemented in subclasses")
@@ -69,7 +71,6 @@ class MqttSpbEntity(SpbEntity):
         """
 
         if not self.is_connected():
-            print("Not Connected to MQTT server")
             return False
 
         # send payload to broker
@@ -85,7 +86,6 @@ class MqttSpbEntity(SpbEntity):
     def _mqtt_on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self._logger.info("%s - Connected to MQTT server" % self._entity_domain)
-
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             if len(self._spb_eon_device_name) == 0:  # EoN
@@ -99,7 +99,7 @@ class MqttSpbEntity(SpbEntity):
                                               self._spb_eon_device_name)
             client.subscribe(topic)
             self._logger.info("%s - Subscribed to MQTT topic: %s" % (self._entity_domain, topic))
-            print("%s - Subscribed to MQTT topic: %s" % (self._entity_domain, topic))
+
             # Subscribe to STATE of SCADA application
             topic = "%s/%s/STATE/+" % (self._spb_namespace,
                                        self._spb_domain_name)
@@ -130,7 +130,6 @@ class MqttSpbEntity(SpbEntity):
         msg_ts_rx = int(time.time() * 1000)  # Save the current timestamp
 
         # self._logger.info("%s - Message received  %s" % (self._entity_domain, msg.topic))
-        print("%s - Message received  %s" % (self._entity_domain, msg.topic))
         # Parse the topic namespace ------------------------------------------------
         topic = SpbTopic(msg.topic)  # Parse and get the topic object
 

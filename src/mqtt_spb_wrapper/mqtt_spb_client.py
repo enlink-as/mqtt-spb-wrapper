@@ -4,8 +4,28 @@ import paho.mqtt.client as mqtt
 class SpbMQTTClient:
 
     def __init__(self):
-        self._mqtt = None
+        
+        self._mqtt = mqtt.Client()
+        self._mqtt.on_disconnect = None #self._mqtt_on_disconnect
+        self._mqtt.on_message = self.on_message # self.on_message
+        self._mqtt.on_connect = self.on_connect
+        self.on_connect_callback_pool = {}
+        self.on_message_callback_pool = {}
 
+    def on_message(self, client, userdata, message):
+        topic = message.topic
+        payload = message.payload
+        for device, callback in self.on_message_callback_pool.items():
+            if topic in device.topics:
+                callback(topic, payload)
+
+    def on_connect(self, client, userdata, flags, rc):
+        for device_id, callback in self.on_connect_callback_pool.items():
+            callback(client)
+
+    def subscribe(self, topic):
+        self._mqtt.subscribe(topic)
+        
     def connect(self,
         host='localhost',
         port=1883,
@@ -42,13 +62,7 @@ class SpbMQTTClient:
             return True
 
         # MQTT Client configuration
-        if self._mqtt is None:
-            self._mqtt = mqtt.Client()
-
-        self._mqtt.on_connect =  None #self._mqtt_on_connect
-        self._mqtt.on_disconnect = None #self._mqtt_on_disconnect
-        self._mqtt.on_message = self.on_message
-
+       
 
         
         if user != "":
@@ -139,11 +153,6 @@ class SpbMQTTClient:
 
     def publish(self, topic, payload, qos, retain):
         return self._mqtt.publish(topic=topic, payload=payload, qos=qos, retain=retain)
-
-    def on_message(self, client, userdata, message):
-        print(f"message received: {message.topic} : {message.payload}")
-        return (client, message)
-        
     
     def loop_stop(self):
         self._mqtt.loop_stop()
