@@ -46,7 +46,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
         # Publish BIRTH message
         payload_bytes = self.serialize_payload_birth()
 
-        topic = "%s/%s/DBIRTH/%s" % (self._spb_namespace,
+        topic = "%s/%s/NBIRTH/%s" % (self._spb_namespace,
                                         self._spb_domain_name,
                                         self._spb_eon_name)
                                         
