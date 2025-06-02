@@ -1,5 +1,6 @@
 import time
 import paho.mqtt.client as mqtt
+import logging
 
 class SpbMQTTClient:
 
@@ -11,7 +12,7 @@ class SpbMQTTClient:
         self._mqtt.on_connect = self.on_connect
         self.on_connect_callback_pool = {}
         self.on_message_callback_pool = {}
-
+        
     def on_message(self, client, userdata, message):
         topic = message.topic
         payload = message.payload
@@ -25,7 +26,7 @@ class SpbMQTTClient:
 
     def subscribe(self, topic):
         self._mqtt.subscribe(topic)
-        
+    
     def connect(self,
         host='localhost',
         port=1883,

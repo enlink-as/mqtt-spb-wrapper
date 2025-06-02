@@ -1,4 +1,5 @@
 import time
+import asyncio
 import paho.mqtt.client as mqtt
 
 from .spb_base import SpbEntity, SpbTopic, SpbPayloadParser
@@ -27,21 +28,23 @@ class MqttSpbEntity(SpbEntity):
                          )
 
         # Public members -----------
-        self.on_command = None  # Callback function when a command is received
+        self.on_command = None
         
         
         self.on_disconnect = None
-       # self.on_message = None
 
         # Private members -----------
         self._spb_namespace = "spBv1.0"     # Default spb namespace
         self._retain_birth = retain_birth
         self._entity_is_scada = entity_is_scada
         self._mqtt = mqtt  # Mqtt client object
-       # self._mqtt.on_connect = self._mqtt_on_connect
+  
         self._loopback_topic = ""  # Last publish topic, to avoid loopback message reception
-#        self._mqtt.on_connect = self._mqtt_on_connect
+        self.config_received_event = asyncio.Event()
+        self.received_config = ""
 
+
+        
     def publish_data(self, send_all=False, qos=0):
         raise NotImplementedError("Must be implemented in subclasses")
 
@@ -71,6 +74,7 @@ class MqttSpbEntity(SpbEntity):
         """
 
         if not self.is_connected():
+            print("mqtt is not connected")
             return False
 
         # send payload to broker

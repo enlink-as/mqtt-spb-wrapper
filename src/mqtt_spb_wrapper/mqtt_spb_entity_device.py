@@ -39,7 +39,6 @@ class MqttSpbEntityDevice(MqttSpbEntity):
         self.topics = [command_topic, state_topic]
         self.listeners = {}
         if self._mqtt.is_connected():
-            
             self.on_connect(self._mqtt, None, None, 0)
         
     def add_listener(self, callback):
@@ -53,7 +52,9 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             client.subscribe(topic)
       
     def on_message(self, topic, payload ):
+        print("device.on_message()")        
         parsed_payload = SpbPayloadParser().parse_payload(payload)
+
         if topic in self.listeners:
             for callback in self.listeners[topic]:
                 callback(topic, parsed_payload)
@@ -103,7 +104,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
-            self._logger.debug("%s - Published DATA message %s" % (self._entity_domain, topic))
+            self._logger.info("%s - Published DATA message %s" % (self._entity_domain, topic))
                   
             return True
 

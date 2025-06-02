@@ -363,6 +363,7 @@ class MetricGroup:
 
         """
 
+        
         # If value is set to None, ignore the update
         if value is None:
             return False
@@ -547,18 +548,9 @@ class SpbEntity:
         Returns:    Nothing
 
         """
-
         # Console Logger
-        self._logger = logging.getLogger(self._debug_id)
-        handler_log = logging.StreamHandler()
-        handler_log.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s | %(message)s'))
-        self._logger.addHandler(handler_log)
+        self._logger = logging.getLogger(__name__)
 
-        # Set level
-        if self._debug_enabled:
-            self._logger.setLevel(logging.DEBUG)
-        else:
-            self._logger.setLevel(logging.ERROR)
 
     @property
     def debug_enabled(self):
@@ -775,7 +767,7 @@ class SpbEntity:
         """
             Serialize the BIRTH message and get payload bytes
         """
-
+        print("Serializing birth message")
         if self._spb_eon_device_name is None:  # If EoN type
             payload = getNodeBirthPayload()
         else:  # Device
@@ -783,6 +775,7 @@ class SpbEntity:
 
         # Attributes
         if not self.attributes.is_empty():
+            print("Found Birth attributes")
             for item in self.attributes.values():
                 # Add metric to payload
                 self._serialize_payload_metric(
@@ -793,6 +786,7 @@ class SpbEntity:
 
         # Data
         if not self.data.is_empty():
+            print("Found birth data")
             for item in self.data.values():
                 # Add metric to payload
                 self._serialize_payload_metric(
@@ -803,6 +797,7 @@ class SpbEntity:
 
         # Commands
         if not self.commands.is_empty():
+            print("Found birth commands")
             for item in self.commands.values():
                 # Add metric to payload
                 self._serialize_payload_metric(
@@ -810,7 +805,7 @@ class SpbEntity:
                     name=self.commands.birth_prefix + "/" + item.name,
                     metric_value=item
                 )
-
+                
         payload_bytes = bytearray(payload.SerializeToString())
 
         return payload_bytes

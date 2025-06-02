@@ -16,17 +16,20 @@ from mqtt_spb_wrapper import *
 _DEBUG = True   # Enable debug messages
 
 # Sparkplug B parameters
-_config_spb_scada_name = os.environ.get("SPB_SCADA", "SCADA-001")
+_config_spb_scada_name = "TEST"
 
-_config_spb_domain_name = os.environ.get("SPB_DOMAIN", "TestDomain")
-_config_spb_eon_name = os.environ.get("SPB_EON", "Edge-001")
-_config_spb_eond_name = os.environ.get("SPB_DEVICE", "Device-01")
+_config_spb_domain_name = "1111"
+_config_spb_eon_name ="a0:b3:39:44:22:17"
+_config_spb_eond_name = "SHELLY"
 
 # MQTT Configuration
-_config_mqtt_host = os.environ.get("MQTT_HOST", "localhost")
-_config_mqtt_port = int(os.environ.get("MQTT_PORT", 1883))
-_config_mqtt_user = os.environ.get("MQTT_USER", "")
-_config_mqtt_pass = os.environ.get("MQTT_PASS", "")
+_config_mqtt_host = "a266501f03604b68b0a440d318a01218.s1.eu.hivemq.cloud" 
+_config_mqtt_port = 8883
+USERNAME = "dev-enlink-node"
+PASSWORD = "BnwJQVtR1XnpidN"
+
+_config_mqtt_user = USERNAME
+_config_mqtt_pass = PASSWORD
 
 print("--- Sparkplug B example - SCADA send cmd example")
 
