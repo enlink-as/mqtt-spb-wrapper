@@ -12,7 +12,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
                  retain_birth=True,
                  debug_enabled=False,
                  debug_id="MQTT_SPB_EDGENODE",
-                 include_spb_rebirth=True,
+                 include_spb_rebirth=False,
                  device_name=None,
                  mqtt=None):
 
@@ -88,6 +88,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
         self._mqtt_payload_publish(topic, payload_bytes, qos, self._retain_birth)
 
         self._logger.info("%s - Published NBIRTH message" % self._entity_domain)
+
         self.is_birth_published = True
 
             
@@ -124,7 +125,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
             self._mqtt_payload_publish(topic, payload_bytes)
             
             self._logger.info("%s - Published COMMAND message to %s" % (self._entity_domain, topic))
-            print("%s - Published COMMAND message to %s" % (self._entity_domain, topic))      
+
 
             return True
 
@@ -140,7 +141,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
         :return:                    result
         """
         if not self.is_connected():  # If not connected
-            print(f"MQTT not connected: {self._entity_domain}")
+
             self._logger.warning(
                 "%s - Could not send publish_telemetry(), not connected to MQTT server" % self._entity_domain)
             return False
@@ -163,7 +164,6 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
             self._logger.debug("%s - Published DATA message %s" % (self._entity_domain, topic))
-            print(f"{self._entity_domain} Published DATA message {topic}")
             return True
 
         self._logger.warning("%s - Could not publish DATA message, may be data no new data values?"
@@ -184,7 +184,6 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
                 topic = "%s/%s/NDEATH/%s" % (self._spb_namespace,
                                              self._spb_domain_name,
                                              self._spb_eon_name)
-                print(f"DEATH topic: {topic}")
                                 
                 self._mqtt_payload_publish(topic, payload_bytes)  # Set message
 

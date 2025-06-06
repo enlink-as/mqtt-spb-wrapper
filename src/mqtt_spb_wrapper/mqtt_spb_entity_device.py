@@ -9,7 +9,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
                  spb_domain_name,
                  spb_eon_name,
                  spb_eon_device_name,
-                 retain_birth=False,
+                 retain_birth=True,
                  debug_enabled=False,
                  mqtt=None
                  ):
@@ -52,7 +52,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             client.subscribe(topic)
       
     def on_message(self, topic, payload ):
-        print("device.on_message()")        
+
         parsed_payload = SpbPayloadParser().parse_payload(payload)
 
         if topic in self.listeners:
@@ -79,7 +79,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
         return True
 
 
-    def publish_data(self, send_all=False, qos=0):
+    def publish_data(self, send_all=False, qos=2):
         if not self.is_connected():  # If not connected
             self._logger.warning(
                 "%s - Could not send publish_telemetry(), not connected to MQTT server" % self._entity_domain)
@@ -104,11 +104,11 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
-            self._logger.info("%s - Published DATA message %s" % (self._entity_domain, topic))
-                  
+            self._logger.info("%s - Published DDATA message %s" % (self._entity_domain, topic))
+
             return True
 
-        self._logger.warning("%s - Could not publish DATA message, may be data no new data values?"
+        self._logger.warning("%s - Could not publish DDATA message, may be data no new data values?"
                              % self._entity_domain)
         return False
 

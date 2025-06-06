@@ -74,7 +74,6 @@ class MqttSpbEntity(SpbEntity):
         """
 
         if not self.is_connected():
-            print("mqtt is not connected")
             return False
 
         # send payload to broker

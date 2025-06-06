@@ -23,7 +23,9 @@ class SpbMQTTClient:
     def on_connect(self, client, userdata, flags, rc):
         for device_id, callback in self.on_connect_callback_pool.items():
             callback(client)
-
+#
+#    MqttSpbEntityEdgeNode.on_connect() missing 3 required positional arguments: 'userdata', '#flags', and 'rc'
+            
     def subscribe(self, topic):
         self._mqtt.subscribe(topic)
     
