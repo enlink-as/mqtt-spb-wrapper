@@ -8,7 +8,7 @@ import base64
 
 from google.protobuf.json_format import MessageToDict
 from .spb_protobuf import getDdataPayload, getNodeBirthPayload, getDeviceBirthPayload, Payload, getValueDataType
-from .spb_protobuf import addMetric, MetricDataType
+from .spb_protobuf import addMetric, MetricDataType, addNullMetric
 from .spb_protobuf.sparkplug_b import addMetricDataset_from_dict
 
 
@@ -365,8 +365,9 @@ class MetricGroup:
 
         
         # If value is set to None, ignore the update
-        if value is None:
-            return False
+        # rather setattr
+#        if value is None:
+#            return False
 
         # If exist update the value, otherwise add the element.
         if name in self._items.keys():
@@ -397,7 +398,7 @@ class MetricGroup:
             spb_alias_num=spb_alias_num,
         )
         self._items[name] = new_item
-
+        
         return True
 
     def remove_value(self, name: str) -> bool:
@@ -485,7 +486,7 @@ class SpbEntity:
         # Group of Metrics
         self.attributes = MetricGroup(birth_prefix="ATTR")
         self.data = MetricGroup(birth_prefix="DATA")
-        self.commands = MetricGroup(birth_prefix="CMD")
+        self.commands = MetricGroup()
 
         # Private members -----------
         self._spb_domain_name = spb_domain_name
@@ -607,6 +608,15 @@ class SpbEntity:
 
         """
 
+        if metric_value.value is None:
+            addNullMetric(
+                payload,
+                name=name,
+                alias=metric_value.spb_alias_num,
+                type=metric_value.spb_data_type
+            )
+            return 
+
         # If multiple values as list send it as spB DataSet
         if metric_value.is_list_values():
             addMetricDataset_from_dict(
@@ -675,6 +685,7 @@ class SpbEntity:
                 metric_value.value = bytes(metric_value.value)
 
         # Add metric
+        
         addMetric(
             payload,
             name=name,
@@ -791,7 +802,8 @@ class SpbEntity:
                 # Add metric to payload
                 self._serialize_payload_metric(
                     payload=payload,
-                    name=self.data.birth_prefix + "/" + item.name,
+                    name = item.name,
+#                    name=self.data.birth_prefix + "/" + item.name,
                     metric_value=item
                 )
 
@@ -802,12 +814,13 @@ class SpbEntity:
                 # Add metric to payload
                 self._serialize_payload_metric(
                     payload=payload,
-                    name=self.commands.birth_prefix + "/" + item.name,
+                    name=item.name,
+#                    name=self.commands.birth_prefix + "/" + item.name,
                     metric_value=item
                 )
                 
         payload_bytes = bytearray(payload.SerializeToString())
-
+        self._logger.debug(f"payload: {payload}")
         return payload_bytes
 
     def deserialize_payload_birth(self, data_bytes):

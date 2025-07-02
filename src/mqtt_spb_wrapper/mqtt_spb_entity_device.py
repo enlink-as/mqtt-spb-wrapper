@@ -104,7 +104,7 @@ class MqttSpbEntityDevice(MqttSpbEntity):
             self._loopback_topic = topic
             self._mqtt_payload_publish(topic, payload_bytes, qos)
 
-            self._logger.info("%s - Published DDATA message %s" % (self._entity_domain, topic))
+            self._logger.debug("%s - Published DDATA message %s" % (self._entity_domain, topic))
 
             return True
 

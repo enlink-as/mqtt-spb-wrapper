@@ -53,7 +53,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
         parsed_payload = SpbPayloadParser().parse_payload(payload)
         if topic in self.listeners:
             for callback in self.listeners[topic]:
-                callback(topic, payload)
+                callback(topic, parsed_payload)
 #self.config_received_event.set()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -78,7 +78,7 @@ class MqttSpbEntityEdgeNode(MqttSpbEntity):
 
         # Publish BIRTH message
         payload_bytes = self.serialize_payload_birth()
-
+        self._logger.info(SpbPayloadParser().parse_payload(payload_bytes))
         topic = "%s/%s/NBIRTH/%s" % (self._spb_namespace,
                                         self._spb_domain_name,
                                         self._spb_eon_name)
